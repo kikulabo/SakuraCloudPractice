@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 const app = express();
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('Hello from AppRun! by kikulabo');
+  res.send('Hello from AppRun! by kikulabo monitoring');
 });
 
 app.get('/health', (req: Request, res: Response) => {
