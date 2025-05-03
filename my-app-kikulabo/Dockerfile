@@ -1,18 +1,54 @@
-FROM node:20-slim
+FROM node:20
+
+ENV NGROK_AUTHTOKEN=""
 
 RUN apt-get update && \
-    apt-get install -y wget sudo && \
-    wget -q -O - https://mackerel.io/file/script/setup-apt-v2.sh | sh && \
-    apt-get install -y mackerel-agent
+    apt-get install -y \
+        openssh-server \
+        curl \
+        unzip \
+        wget \
+        sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget -q -O - https://mackerel.io/file/script/setup-apt-v2.sh | sh && \
+    apt-get install -y mackerel-agent mackerel-agent-plugins
+
+RUN curl -L https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip -o ngrok.zip \
+ && unzip ngrok.zip -d /usr/local/bin \
+ && rm ngrok.zip
+
+RUN mkdir -p /var/run/sshd
+
+# ログディレクトリの作成と権限設定
+RUN mkdir -p /var/log && \
+    touch /var/log/app.log && \
+    touch /var/log/entrypoint.log && \
+    chmod 666 /var/log/app.log && \
+    chmod 666 /var/log/entrypoint.log
+
+RUN useradd -m -s /bin/bash devuser && adduser devuser sudo
+COPY public_key.pub /home/devuser/.ssh/authorized_keys
+RUN chown -R devuser:devuser /home/devuser/.ssh && \
+    chmod 700 /home/devuser/.ssh && \
+    chmod 600 /home/devuser/.ssh/authorized_keys
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+RUN sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
+RUN sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
 
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
 RUN npm run build
+
+COPY custom_mackerel-agent.conf /my-app-kikulabo/custom_mackerel-agent.conf
+
 EXPOSE 8080
+EXPOSE 22
 
-COPY entry.sh /app/entry.sh
-RUN chmod +x /app/entry.sh
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
-CMD ["/app/entry.sh"]
+CMD ["/app/entrypoint.sh"]
