@@ -35,13 +35,3 @@ app.get('/health', (req: Request, res: Response) => {
   logMessage('GET /health - Status: ok');
   res.json({ status: 'ok' });
 });
-
-// ログファイルが存在しない場合は作成
-if (!fs.existsSync(APP_LOG_FILE)) {
-  fs.writeFileSync(APP_LOG_FILE, '');
-}
-
-app.listen(8080, () => {
-  logMessage('Server is running on port 8080');
-  console.log('Server is running on port 8080');
-});
