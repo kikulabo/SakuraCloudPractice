@@ -2,7 +2,6 @@ import express, { Request, Response } from 'express';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
-import path from 'path';
 
 const app = express();
 const execAsync = promisify(exec);
