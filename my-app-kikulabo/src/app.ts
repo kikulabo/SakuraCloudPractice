@@ -37,18 +37,6 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
 
-// entrypoint.logを確認するエンドポイント
-app.get('/logs/entrypoint', (req: Request, res: Response) => {
-  try {
-    const logs = fs.readFileSync(ENTRYPOINT_LOG_FILE, 'utf8');
-    logMessage('GET /logs/entrypoint - Successfully read entrypoint logs');
-    res.send(logs);
-  } catch (error) {
-    logMessage(`GET /logs/entrypoint - Error: ${error}`);
-    res.status(500).send('Error reading entrypoint logs');
-  }
-});
-
 // ログファイルが存在しない場合は作成
 if (!fs.existsSync(APP_LOG_FILE)) {
   fs.writeFileSync(APP_LOG_FILE, '');
