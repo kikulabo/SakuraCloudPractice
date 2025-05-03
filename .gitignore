@@ -166,3 +166,6 @@ override.tf.json
 .terraformrc
 terraform.rc
 .terraform.lock.hcl
+
+# public key
+public_key.pub
