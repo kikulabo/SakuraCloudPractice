@@ -9,7 +9,6 @@ const execAsync = promisify(exec);
 
 // ログファイルのパスを設定
 const APP_LOG_FILE = '/var/log/app.log';
-const ENTRYPOINT_LOG_FILE = '/var/log/entrypoint.log';
 
 // ログを出力する関数
 const logMessage = (message: string) => {
