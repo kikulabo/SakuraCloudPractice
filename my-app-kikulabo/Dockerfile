@@ -1,7 +1,5 @@
 FROM node:20
 
-ENV NGROK_AUTHTOKEN=""
-
 RUN apt-get update && \
     apt-get install -y \
         openssh-server \
@@ -9,9 +7,11 @@ RUN apt-get update && \
         unzip \
         wget \
         sudo \
-    && rm -rf /var/lib/apt/lists/*
+        gnupg2 \
+        lsb-release
 
 RUN wget -q -O - https://mackerel.io/file/script/setup-apt-v2.sh | sh && \
+    apt-get update && \
     apt-get install -y mackerel-agent mackerel-agent-plugins
 
 RUN curl -L https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip -o ngrok.zip \
@@ -50,5 +50,14 @@ EXPOSE 22
 
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
+
+# fluent-bitのインストール
+RUN wget -qO - https://packages.fluentbit.io/fluentbit.key | gpg --dearmor > /usr/share/keyrings/fluentbit-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/fluentbit-keyring.gpg] https://packages.fluentbit.io/debian/bookworm bookworm main" > /etc/apt/sources.list.d/fluentbit.list && \
+    apt-get update && \
+    apt-get install -y fluent-bit && \
+    ln -s /opt/fluent-bit/bin/fluent-bit /usr/local/bin/fluent-bit && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /etc/fluent-bit
 
 CMD ["/app/entrypoint.sh"]
