@@ -9,8 +9,9 @@ function writeLog(level: string, message: string, metadata: Record<string, any> 
   const logEntry = {
     timestamp: new Date().toISOString(),
     level,
-    message,
-    ...metadata
+    message: metadata && Object.keys(metadata).length > 0
+      ? `${message} | ${JSON.stringify(metadata)}`
+      : message
   };
 
   fs.appendFileSync(APP_LOG_FILE, JSON.stringify(logEntry) + '\n');
