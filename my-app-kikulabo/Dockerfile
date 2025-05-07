@@ -8,7 +8,8 @@ RUN apt-get update && \
         wget \
         sudo \
         gnupg2 \
-        lsb-release
+        lsb-release \
+        nginx
 
 RUN wget -q -O - https://mackerel.io/file/script/setup-apt-v2.sh | sh && \
     apt-get update && \
@@ -24,8 +25,13 @@ RUN mkdir -p /var/run/sshd
 RUN mkdir -p /var/log && \
     touch /var/log/app.log && \
     touch /var/log/entrypoint.log && \
+    mkdir -p /var/log/nginx && \
+    touch /var/log/nginx/access.log && \
+    touch /var/log/nginx/error.log && \
     chmod 666 /var/log/app.log && \
-    chmod 666 /var/log/entrypoint.log
+    chmod 666 /var/log/entrypoint.log && \
+    chmod 666 /var/log/nginx/access.log && \
+    chmod 666 /var/log/nginx/error.log
 
 RUN useradd -m -s /bin/bash devuser && adduser devuser sudo
 COPY public_key.pub /home/devuser/.ssh/authorized_keys
@@ -44,9 +50,11 @@ COPY . .
 RUN npm run build
 
 COPY custom_mackerel-agent.conf /my-app-kikulabo/custom_mackerel-agent.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 8080
 EXPOSE 22
+EXPOSE 80
 
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh

@@ -9,6 +9,24 @@ log() {
     echo "{\"time\":\"$(date '+%Y-%m-%d %H:%M:%S')\",\"message\":\"$1\"}" | tee -a "$LOG_FILE"
 }
 
+if [ -n "$FLUENTBIT_AUTH_TOKEN" ]; then
+    log "Fluentbit認証トークンが設定されています。Fluentbitを起動します..."
+    mkdir -p /etc/fluent-bit
+    cat /app/fluentbit.conf | sed "s/FLUENTBIT_AUTH_TOKEN/${FLUENTBIT_AUTH_TOKEN}/g" > /etc/fluent-bit/fluent-bit.conf
+    cp /app/parsers.conf /etc/fluent-bit/parsers.conf
+
+    fluent-bit -c /etc/fluent-bit/fluent-bit.conf > /dev/null 2>&1 &
+    FLUENTBIT_PID=$!
+    if ps -p $FLUENTBIT_PID > /dev/null; then
+        log "Fluentbit (PID: $FLUENTBIT_PID) がバックグラウンドで起動しました。"
+    else
+        log "Fluentbitの起動に失敗しました。"
+        exit 1
+    fi
+else
+    log "環境変数 FLUENTBIT_AUTH_TOKEN が設定されていないため、Fluentbitは起動しません。"
+fi
+
 if [ -n "$NGROK_AUTHTOKEN" ]; then
     log "NGROK_AUTHTOKENが設定されています。SSHサーバーとngrokトンネルを起動します..."
 
@@ -47,22 +65,14 @@ else
     log "環境変数 MACKEREL_APIKEY が設定されていないため、Mackerelエージェントは起動しません。"
 fi
 
-if [ -n "$FLUENTBIT_AUTH_TOKEN" ]; then
-    log "Fluentbit認証トークンが設定されています。Fluentbitを起動します..."
-    mkdir -p /etc/fluent-bit
-    cat /app/fluentbit.conf | sed "s/FLUENTBIT_AUTH_TOKEN/${FLUENTBIT_AUTH_TOKEN}/g" > /etc/fluent-bit/fluent-bit.conf
-    cp /app/parsers.conf /etc/fluent-bit/parsers.conf
-
-    fluent-bit -c /etc/fluent-bit/fluent-bit.conf > /dev/null 2>&1 &
-    FLUENTBIT_PID=$!
-    if ps -p $FLUENTBIT_PID > /dev/null; then
-        log "Fluentbit (PID: $FLUENTBIT_PID) がバックグラウンドで起動しました。"
-    else
-        log "Fluentbitの起動に失敗しました。"
-        exit 1
-    fi
+log "Nginxを起動します..."
+nginx -g 'daemon off;' > /dev/null 2>&1 &
+NGINX_PID=$!
+if ps -p $NGINX_PID > /dev/null; then
+    log "Nginx (PID: $NGINX_PID) がバックグラウンドで起動しました。"
 else
-    log "環境変数 FLUENTBIT_AUTH_TOKEN が設定されていないため、Fluentbitは起動しません。"
+    log "Nginxの起動に失敗しました。"
+    exit 1
 fi
 
 log "Node.js アプリケーションを起動します..."
