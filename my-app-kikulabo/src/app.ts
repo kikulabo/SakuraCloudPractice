@@ -1,9 +1,15 @@
 import express, { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
+import './tracing';  // OpenTelemetryの初期化を追加
 
 const app = express();
 const APP_LOG_FILE = '/var/log/app.log';
+
+// ログディレクトリが存在しない場合は作成
+if (!fs.existsSync('./logs')) {
+  fs.mkdirSync('./logs');
+}
 
 function writeLog(level: string, message: string, metadata: Record<string, any> = {}) {
   const logEntry = {
