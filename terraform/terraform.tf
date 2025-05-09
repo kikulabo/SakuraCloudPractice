@@ -29,7 +29,7 @@ variable "password" {
 # ディスクにインストールするイメージを指定。他には"centos8stream"や"ubuntu"などが指定できます。
 # 設定できるos_typeの詳細: https://docs.usacloud.jp/terraform/d/archive/
 data "sakuracloud_archive" "ubuntu" {
-  os_type = "ubuntu2004"
+  os_type = "ubuntu2204"
 }
 
 # 作成するディスクを定義
