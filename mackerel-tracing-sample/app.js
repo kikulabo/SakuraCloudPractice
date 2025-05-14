@@ -6,6 +6,9 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// JSONリクエストボディを解析するためのミドルウェアを追加
+app.use(express.json());
+
 app.get('/', (req, res) => {
   console.log('Request received for /');
   res.send('Hello World from Mackerel Tracing Sample!');
@@ -19,6 +22,25 @@ app.get('/hello', async (req, res) => {
   await new Promise(resolve => setTimeout(resolve, 150));
 
   res.send(`Hello, ${name}! This request should be traced.`);
+});
+
+app.post('/users', async (req, res) => {
+  const { name, email } = req.body;
+  console.log(`POST request received for /users with data:`, req.body);
+
+  // 非同期処理のシミュレーション
+  await new Promise(resolve => setTimeout(resolve, 150));
+
+  // バリデーション
+  if (!name || !email) {
+    return res.status(400).json({ error: 'Name and email are required' });
+  }
+
+  // 成功レスポンス
+  res.status(201).json({
+    message: 'User created successfully',
+    user: { name, email }
+  });
 });
 
 app.listen(port, () => {
