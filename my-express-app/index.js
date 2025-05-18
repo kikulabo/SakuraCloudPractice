@@ -1,3 +1,5 @@
+import './tracing';
+
 const express = require('express');
 const app = express();
 
